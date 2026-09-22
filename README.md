@@ -1,8 +1,8 @@
 # AWS Cloud Lab
 
-A hands-on cloud engineering project for learning how to deploy, secure, automate, and operate an application on AWS.
+A hands-on cloud engineering project for building, securing, automating, monitoring, and operating application infrastructure on AWS.
 
-The application is intentionally simple so the focus remains on cloud infrastructure, Linux, networking, automation, and DevOps practices.
+The application is intentionally simple so the focus remains on cloud infrastructure, Linux, networking, high availability, observability, Infrastructure as Code, automation, and DevOps practices.
 
 ## Application
 
@@ -23,11 +23,17 @@ Database configuration is provided through environment variables. See `.env.exam
   - VPC
   - EC2
   - Application Load Balancer
+  - Auto Scaling
   - RDS PostgreSQL
+  - IAM
+  - CloudWatch
 - Linux
 - Git
+- Docker
+- Terraform
+- GitHub Actions
 
-Additional infrastructure and tooling will be added as the project progresses.
+Additional infrastructure and automation will be added as the project progresses.
 
 ## Running Locally
 
@@ -53,26 +59,27 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000
 
 ## Project Goals
 
-This project will progressively explore:
+This project progressively explores:
 
 - AWS networking and VPC architecture
 - EC2 and Linux administration
 - Amazon RDS and managed databases
 - Load balancing and high availability
-- Infrastructure as Code with Terraform
+- Auto Scaling and self-healing infrastructure
+- CloudWatch monitoring, logging, and alarms
 - Docker and containerization
+- Infrastructure as Code with Terraform
 - CI/CD with GitHub Actions
 - IAM and cloud security
-- Monitoring and logging
 - Python and Bash automation
 - AWS Systems Manager
-- Infrastructure troubleshooting
+- Infrastructure troubleshooting and failure analysis
 
 ## Architecture
 
-The architecture will evolve throughout the project as new cloud engineering concepts are implemented.
+The architecture evolves throughout the project as additional cloud engineering concepts are introduced.
 
-### Stage 1 — Manual AWS Infrastructure
+### Phase 1 — Manual AWS Infrastructure
 
 Deployed the FastAPI application to a private EC2 instance behind an Application Load Balancer.
 
@@ -128,7 +135,9 @@ The application instance has no public IP address. The NAT instance provides out
 
 Security Groups restrict communication between infrastructure layers rather than exposing the application directly to the Internet.
 
-### Stage 2 — RDS PostgreSQL / Private Data Tier
+---
+
+### Phase 2 — RDS PostgreSQL / Private Data Tier
 
 Extended the architecture with a private Amazon RDS PostgreSQL database.
 
@@ -147,7 +156,7 @@ RDS PostgreSQL :5432
 
 The database is not publicly accessible and is deployed within dedicated private database subnets.
 
-A DB subnet group spans multiple Availability Zones while the current database deployment remains Single-AZ.
+A DB subnet group spans multiple Availability Zones while the initial database deployment remains Single-AZ.
 
 Security Groups restrict PostgreSQL access to the application tier:
 
@@ -186,7 +195,96 @@ psycopg
 RDS PostgreSQL
 ```
 
-Database failure handling was also tested by deliberately blocking application-to-database traffic. The application detected the failed dependency and returned `503 Service Unavailable`, then recovered after connectivity was restored.
+Database failure handling was tested by deliberately blocking application-to-database traffic. The application detected the unavailable dependency and returned `503 Service Unavailable`, then recovered after connectivity was restored.
+
+---
+
+### Phase 3 — CloudWatch / Observability
+
+Added monitoring and observability using Amazon CloudWatch.
+
+AWS service metrics were reviewed for EC2, the Application Load Balancer, and RDS. A CloudWatch dashboard and alarms were created to monitor infrastructure and application conditions.
+
+A CloudWatch Agent was installed and configured on EC2 to collect guest operating system metrics and application logs.
+
+```text
+EC2 / ALB / RDS
+      |
+      v
+CloudWatch Metrics
+      |
+      +--> Dashboard
+      |
+      +--> Alarms
+
+EC2 Guest OS / Application
+      |
+      v
+CloudWatch Agent
+      |
+      +--> Guest OS Metrics
+      |
+      +--> Application Logs
+                |
+                v
+          CloudWatch Logs
+```
+
+The monitoring pipeline was validated end-to-end by publishing guest OS memory metrics and application log events to CloudWatch.
+
+The phase also documented a layer-by-layer troubleshooting process for diagnosing failures in the application logging and telemetry pipeline.
+
+---
+
+### Phase 4 — Multi-AZ / High Availability
+
+Designed the application architecture to remove single-instance and single-Availability-Zone dependencies.
+
+```text
+                         Internet
+                            |
+                            v
+                 Application Load Balancer
+                       /           \
+                      /             \
+                   AZ-1a           AZ-1b
+                     |               |
+                     v               v
+                 App EC2         App EC2
+                     \               /
+                      \             /
+                       Target Group
+                            ^
+                            |
+                    Auto Scaling Group
+                    Min:     2
+                    Desired: 2
+                    Max:     4
+
+                 RDS Multi-AZ Deployment
+                       /           \
+                      /             \
+                  Primary         Standby
+                   AZ-1a           AZ-1b
+```
+
+The high-availability design includes:
+
+- Public, private application, and private database subnets across two Availability Zones
+- Independent outbound NAT paths for each application Availability Zone
+- Application Load Balancer spanning multiple Availability Zones
+- Health-based traffic distribution through an ALB target group
+- Launch Templates for reproducible application instances
+- Auto Scaling Group across both private application subnets
+- Minimum and desired capacity of two application instances
+- Instance replacement and self-healing behavior
+- RDS Multi-AZ primary/standby architecture
+- Security Group-based trust between ALB, application, and database tiers
+- IAM instance roles and AWS-managed application secrets
+
+The Auto Scaling configuration separates high availability from demand-based scaling. A desired capacity of two maintains the redundant application fleet, while additional scaling policies can later increase capacity in response to workload metrics.
+
+This architecture will serve as the target infrastructure for the Terraform implementation, where the complete environment will be reproduced as code.
 
 ## Project Progress
 
@@ -213,23 +311,58 @@ Database failure handling was also tested by deliberately blocking application-t
 - Database-backed `/db-health` endpoint
 - Database failure and recovery testing
 
+### Phase 3 — CloudWatch / Observability ✅
+
+- EC2, ALB, and RDS service metrics
+- CloudWatch dashboard
+- CloudWatch alarms
+- CloudWatch Agent
+- Guest OS metrics
+- Application log collection
+- IAM role-based telemetry publishing
+- Monitoring pipeline troubleshooting and recovery workflow
+
+### Phase 4 — Multi-AZ / High Availability ✅
+
+- Multi-AZ network architecture
+- Per-AZ application and database subnet design
+- Per-AZ NAT architecture
+- ALB health-based traffic distribution
+- Launch Template design
+- Auto Scaling Group configuration
+- Multi-AZ instance placement
+- Min / desired / max capacity behavior
+- EC2 and ELB health-check strategy
+- Self-healing architecture
+- RDS Multi-AZ design
+- Instance and Availability Zone failure behavior
+
+### Phase 5 — Docker 🚧
+
+- Dockerfile
+- Container images and containers
+- Containerize FastAPI
+- Ports and container networking
+- Environment variables
+- Container logs
+- Build, run, and debug lifecycle
+
 ### Upcoming
 
-- Phase 3 — CloudWatch / Observability
-- Phase 4 — Multi-AZ / High Availability
-- Phase 5 — Docker
-- Phase 6 — Terraform
-- Phase 7 — CI/CD
+- Phase 6 — Terraform / Infrastructure as Code
+- Phase 7 — CI/CD with GitHub Actions
 - Phase 8 — Python/Bash Automation
 - Phase 9 — Systems Manager / Session Manager
 
 ## Documentation
 
-Detailed implementation notes, architecture decisions, troubleshooting, and lessons learned:
+Detailed implementation notes, architecture decisions, troubleshooting, and lessons learned are maintained throughout the project.
 
-- [Phase 1 — Manual AWS Infrastructure](docs/phase-1-manual-infrastructure.md)
-- [Phase 2 — RDS PostgreSQL / Private Data Tier](docs/phase-2-rds-postgresql.md)
+- Phase 1 — Manual AWS Infrastructure
+- Phase 2 — RDS PostgreSQL / Private Data Tier
+- Phase 3 — CloudWatch / Observability
+- Phase 4 — Multi-AZ / High Availability
 
 ## Status
 
-🚧 In development — Phase 2 complete
+🚧 In development — Phase 5: Docker
