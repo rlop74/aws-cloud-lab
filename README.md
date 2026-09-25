@@ -337,15 +337,21 @@ This architecture will serve as the target infrastructure for the Terraform impl
 - RDS Multi-AZ design
 - Instance and Availability Zone failure behavior
 
-### Phase 5 — Docker 🚧
+### Phase 5 — Docker ✅
 
-- Dockerfile
-- Container images and containers
-- Containerize FastAPI
-- Ports and container networking
-- Environment variables
-- Container logs
-- Build, run, and debug lifecycle
+Containerized the FastAPI application and established a reproducible Docker build and runtime workflow.
+
+- Dockerfile using a slim Python base image
+- `.dockerignore` for build-context and secret exclusion
+- FastAPI containerization with Uvicorn
+- Dependency installation with `uv`
+- Dependency-first Docker layer caching
+- Optimized container image size
+- Host-to-container port publishing
+- Runtime environment configuration
+- Container logging and inspection
+- Container lifecycle and troubleshooting
+- End-to-end containerized application validation
 
 ### Upcoming
 
@@ -362,7 +368,8 @@ Detailed implementation notes, architecture decisions, troubleshooting, and less
 - Phase 2 — RDS PostgreSQL / Private Data Tier
 - Phase 3 — CloudWatch / Observability
 - Phase 4 — Multi-AZ / High Availability
+- Phase 5 — Docker
 
 ## Status
 
-🚧 In development — Phase 5: Docker
+🚧 In development — Phase 6: Terraform / Infrastructure as Code
