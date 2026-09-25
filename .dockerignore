@@ -1,0 +1,21 @@
+# secrets
+.env
+
+# git
+.git
+.gitignore
+
+# local python environment
+.venv
+__pycache__
+*.pyc
+
+# local python version
+.python-version
+
+# documentation
+README.md
+
+# docker build files
+Dockerfile
+.dockerignore
