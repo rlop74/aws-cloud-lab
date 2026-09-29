@@ -1,1 +1,29 @@
+# Environment variables
 .env
+.env.*
+
+!.env.example
+
+# Terraform working directory
+.terraform/
+
+# Terraform state (may contain sensitive information)
+*.tfstate
+*.tfstate.*
+
+# Terraform variable files (may contain secrets)
+*.tfvars
+*.tfvars.json
+
+# Terraform plan files
+*.tfplan
+
+# Terraform crash logs
+crash.log
+crash.*.log
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

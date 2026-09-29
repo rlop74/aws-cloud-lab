@@ -353,9 +353,29 @@ Containerized the FastAPI application and established a reproducible Docker buil
 - Container lifecycle and troubleshooting
 - End-to-end containerized application validation
 
+### Phase 6 — Terraform Infrastructure as Code (In Progress)
+
+**Completed**
+
+- Configured Terraform AWS provider.
+- Provisioned VPC (`10.0.0.0/16`).
+- Created six subnets across two Availability Zones.
+- Created and attached an Internet Gateway.
+- Created four custom route tables.
+- Configured public default route to the Internet Gateway.
+- Associated all six subnets with their respective route tables.
+- Used `for_each`, locals, and map filtering to manage resources dynamically.
+- Successfully deployed and verified 19 Terraform-managed AWS resources.
+
+**Next**
+
+- Deploy two NAT Gateways with Elastic IPs.
+- Configure private application default routes.
+- Validate Multi-AZ outbound connectivity.
+- Introduce the deploy → validate → destroy workflow.
+
 ### Upcoming
 
-- Phase 6 — Terraform / Infrastructure as Code
 - Phase 7 — CI/CD with GitHub Actions
 - Phase 8 — Python/Bash Automation
 - Phase 9 — Systems Manager / Session Manager
