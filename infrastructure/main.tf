@@ -66,3 +66,48 @@ resource "aws_route" "public" {
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.cloud_lab.id
 }
+
+resource "aws_eip" "nat_a" {
+  domain = "vpc"
+
+  tags = {
+    Name = "aws_eip_nat_a"
+  }
+}
+
+resource "aws_eip" "nat_b" {
+  domain = "vpc"
+  tags = {
+    Name = "aws_eip_nat_b"
+  }
+}
+
+resource "aws_nat_gateway" "nat_gw_a" {
+  allocation_id = aws_eip.nat_a.id
+  subnet_id     = aws_subnet.subnets["public_a"].id
+
+  tags = {
+    Name = "aws_nat_gw_a"
+  }
+}
+
+resource "aws_nat_gateway" "nat_gw_b" {
+  allocation_id = aws_eip.nat_b.id
+  subnet_id     = aws_subnet.subnets["public_b"].id
+
+  tags = {
+    Name = "aws_nat_gw_b"
+  }
+}
+
+resource "aws_route" "private_app_a_internet_access" {
+  route_table_id         = aws_route_table.route_tables["private_app_a"].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat_gw_a.id
+}
+
+resource "aws_route" "private_app_b_internet_access" {
+  route_table_id         = aws_route_table.route_tables["private_app_b"].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat_gw_b.id
+}
