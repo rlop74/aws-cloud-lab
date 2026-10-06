@@ -79,9 +79,14 @@ locals {
     if startswith(key, "private_app")
   }
 
-  app_route_tables = {
-    for key, route_table in local.route_tables :
-    key => route_table
-    if startswith(key, "private_app")
+  security_groups = {
+    alb_sg = {
+      name        = "alb_sg"
+      description = "alb_sg"
+    }
+    app_sg = {
+      name        = "app_sg"
+      description = "app_sg"
+    }
   }
 }

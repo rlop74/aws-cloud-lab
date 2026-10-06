@@ -111,3 +111,76 @@ resource "aws_route" "private_app_b_internet_access" {
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.nat_gw_b.id
 }
+
+resource "aws_security_group" "security_groups" {
+  for_each = local.security_groups
+
+  name        = each.value.name
+  description = each.value.description
+  vpc_id      = aws_vpc.cloud_lab.id
+
+  tags = {
+    Name = each.value.name
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_allow_http_ingress" {
+  security_group_id = aws_security_group.security_groups["alb_sg"].id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 80
+  to_port           = 80
+
+  tags = {
+    Name = "alb_allow_http_ingress"
+  }
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_egress_to_app" {
+  security_group_id            = aws_security_group.security_groups["alb_sg"].id
+  referenced_security_group_id = aws_security_group.security_groups["app_sg"].id
+
+  ip_protocol = "tcp"
+  from_port   = 8000
+  to_port     = 8000
+
+  tags = {
+    Name = "alb_egress_to_app"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "app_allow_alb_ingress" {
+  security_group_id            = aws_security_group.security_groups["app_sg"].id
+  referenced_security_group_id = aws_security_group.security_groups["alb_sg"].id
+
+  ip_protocol = "tcp"
+  from_port   = 8000
+  to_port     = 8000
+  description = "Allow inbound traffic from the ALB SG via port 8000"
+
+  tags = {
+    Name = "app_allow_alb_ingress"
+  }
+}
+
+resource "aws_vpc_security_group_egress_rule" "app_egress_to_internet" {
+  security_group_id = aws_security_group.security_groups["app_sg"].id
+
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "-1" # allow all traffic
+
+  tags = {
+    Name = "app_egress_to_internet"
+  }
+}
+
+resource "aws_lb" "alb" {
+  name               = "aws-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.security_groups["alb_sg"].id]
+  subnets = [
+    for key, subnet in local.public_subnets :
+    aws_subnet.subnets[key].id
+  ]
+}
