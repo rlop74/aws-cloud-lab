@@ -395,7 +395,7 @@ Containerized the FastAPI application and established a reproducible Docker buil
 
 Detailed implementation notes, architecture decisions, troubleshooting, and lessons learned are maintained throughout the project.
 
-- Phase 1 — Manual AWS Infrastructure
+- [Phase 1 — Manual AWS Infrastructure](docs/phase-1-manual-infrastructure.md)
 - Phase 2 — RDS PostgreSQL / Private Data Tier
 - Phase 3 — CloudWatch / Observability
 - Phase 4 — Multi-AZ / High Availability
