@@ -362,17 +362,28 @@ Containerized the FastAPI application and established a reproducible Docker buil
 - Created six subnets across two Availability Zones.
 - Created and attached an Internet Gateway.
 - Created four custom route tables.
-- Configured public default route to the Internet Gateway.
-- Associated all six subnets with their respective route tables.
-- Used `for_each`, locals, and map filtering to manage resources dynamically.
-- Successfully deployed and verified 19 Terraform-managed AWS resources.
+- Configured public routing through the Internet Gateway.
+- Deployed two NAT Gateways with dedicated Elastic IPs.
+- Configured per-AZ private application routing through the corresponding NAT Gateway.
+- Kept private database subnets isolated from direct Internet routing.
+- Created Application Load Balancer across both public subnets.
+- Created ALB and application Security Groups.
+- Restricted ALB ingress to HTTP `80`.
+- Restricted ALB → application traffic to TCP `8000` using Security Group references.
+- Configured application outbound access for private Internet connectivity through NAT.
+- Used `for_each`, locals, map filtering, and resource references to manage infrastructure dynamically.
+- Validated infrastructure changes with `terraform fmt`, `terraform validate`, and `terraform plan`.
 
 **Next**
 
-- Deploy two NAT Gateways with Elastic IPs.
-- Configure private application default routes.
-- Validate Multi-AZ outbound connectivity.
-- Introduce the deploy → validate → destroy workflow.
+- Create Launch Template for application instances.
+- Create Auto Scaling Group across both private application subnets.
+- Create ALB target group and listener.
+- Attach the Auto Scaling Group to the target group.
+- Recreate the RDS PostgreSQL data tier with Multi-AZ deployment.
+- Add IAM and observability configuration.
+- Configure remote Terraform state.
+- Deploy and validate the complete Terraform-managed architecture.
 
 ### Upcoming
 
