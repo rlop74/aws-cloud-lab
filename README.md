@@ -373,15 +373,26 @@ Containerized the FastAPI application and established a reproducible Docker buil
 - Configured application outbound access for private Internet connectivity through NAT.
 - Used `for_each`, locals, map filtering, and resource references to manage infrastructure dynamically.
 - Validated infrastructure changes with `terraform fmt`, `terraform validate`, and `terraform plan`.
+- Created EC2 IAM role with an EC2 trust policy.
+- Attached AWS-managed CloudWatch Agent and Systems Manager policies to the IAM role.
+- Created IAM Instance Profile for EC2 instances.
+- Created EC2 Launch Template using Amazon Linux 2023 (x86_64) and t3.micro.
+- Configured encrypted 20 GiB gp3 root EBS volume.
+- Enforced IMDSv2 for EC2 instance metadata access.
+- Configured EC2 user data to install and start Docker automatically.
+- Published the application Docker image to Docker Hub (`rlop4/aws-cloud-lab:1.2`).
+- Configured user data to pull and run the FastAPI container on port 8000 with an automatic restart policy.
 
 **Next**
 
-- Create Launch Template for application instances.
+Next
+
+- Create ALB Target Group with HTTP health checks using `/health`.
+- Create ALB listener to forward HTTP traffic to the Target Group.
 - Create Auto Scaling Group across both private application subnets.
-- Create ALB target group and listener.
-- Attach the Auto Scaling Group to the target group.
+- Attach the Auto Scaling Group to the Target Group.
 - Recreate the RDS PostgreSQL data tier with Multi-AZ deployment.
-- Add IAM and observability configuration.
+- Complete observability and application configuration.
 - Configure remote Terraform state.
 - Deploy and validate the complete Terraform-managed architecture.
 
