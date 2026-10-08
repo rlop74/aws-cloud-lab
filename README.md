@@ -385,8 +385,6 @@ Containerized the FastAPI application and established a reproducible Docker buil
 
 **Next**
 
-Next
-
 - Create ALB Target Group with HTTP health checks using `/health`.
 - Create ALB listener to forward HTTP traffic to the Target Group.
 - Create Auto Scaling Group across both private application subnets.
