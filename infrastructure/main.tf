@@ -184,3 +184,107 @@ resource "aws_lb" "alb" {
     aws_subnet.subnets[key].id
   ]
 }
+
+# iam
+resource "aws_iam_role" "app_ec2_role" {
+  name = "app_ec2_role"
+
+  assume_role_policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "sts:AssumeRole"
+          ],
+          "Principal" : {
+            "Service" : [
+              "ec2.amazonaws.com"
+            ]
+          }
+        }
+      ]
+    }
+  )
+  tags = {
+    tag-key = "app_ec2_role"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy_attachment" {
+  role       = aws_iam_role.app_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "systems_manager_session_manager" {
+  role       = aws_iam_role.app_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "app_ec2" {
+  name = "app_ec2"
+  role = aws_iam_role.app_ec2_role.name
+}
+
+# compute
+resource "aws_launch_template" "aws_cloud_lab" {
+  name = "lab_launch_template"
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+
+    ebs {
+      volume_size           = 20
+      volume_type           = "gp3"
+      encrypted             = true
+      delete_on_termination = true
+    }
+  }
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.app_ec2.name
+  }
+
+  # image_id = "ami-test"
+  image_id = "ami-0d27e0fb3bac4d724"
+
+  instance_type = "t3.micro"
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+    instance_metadata_tags      = "enabled"
+  }
+
+  monitoring {
+    enabled = true
+  }
+
+  # vpc_security_group_ids = ["sg-12345678"]
+  vpc_security_group_ids = [aws_security_group.security_groups["app_sg"].id]
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "aws_cloud_lab"
+    }
+  }
+
+  # user_data = filebase64("${path.module}/example.sh")
+  user_data = base64encode(<<-EOF
+  #!/bin/bash
+  set -e # tells Bash to exit if a command fails, rather than continuing with a broken setup
+  
+  sudo dnf upgrade -y
+  sudo dnf install docker -y
+  sudo systemctl enable --now docker
+
+  docker pull rlop4/aws-cloud-lab:1.2
+  docker run -d --restart always --name aws-cloud-lab -p 8000:8000 rlop4/aws-cloud-lab:1.2
+  EOF
+  )
+}
+
