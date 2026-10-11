@@ -358,37 +358,20 @@ Containerized the FastAPI application and established a reproducible Docker buil
 **Completed**
 
 - Configured Terraform AWS provider.
-- Provisioned VPC (`10.0.0.0/16`).
-- Created six subnets across two Availability Zones.
-- Created and attached an Internet Gateway.
-- Created four custom route tables.
-- Configured public routing through the Internet Gateway.
-- Deployed two NAT Gateways with dedicated Elastic IPs.
-- Configured per-AZ private application routing through the corresponding NAT Gateway.
-- Kept private database subnets isolated from direct Internet routing.
-- Created Application Load Balancer across both public subnets.
-- Created ALB and application Security Groups.
-- Restricted ALB ingress to HTTP `80`.
-- Restricted ALB → application traffic to TCP `8000` using Security Group references.
-- Configured application outbound access for private Internet connectivity through NAT.
-- Used `for_each`, locals, map filtering, and resource references to manage infrastructure dynamically.
-- Validated infrastructure changes with `terraform fmt`, `terraform validate`, and `terraform plan`.
-- Created EC2 IAM role with an EC2 trust policy.
-- Attached AWS-managed CloudWatch Agent and Systems Manager policies to the IAM role.
-- Created IAM Instance Profile for EC2 instances.
-- Created EC2 Launch Template using Amazon Linux 2023 (x86_64) and t3.micro.
-- Configured encrypted 20 GiB gp3 root EBS volume.
-- Enforced IMDSv2 for EC2 instance metadata access.
-- Configured EC2 user data to install and start Docker automatically.
-- Published the application Docker image to Docker Hub (`rlop4/aws-cloud-lab:1.2`).
-- Configured user data to pull and run the FastAPI container on port 8000 with an automatic restart policy.
+- Defined VPC (`10.0.0.0/16`) and six subnets across two Availability Zones.
+- Configured Internet Gateway, route tables, and per-AZ NAT Gateways.
+- Configured public, private application, and isolated database subnet routing.
+- Created ALB, Target Group, HTTP listener, and `/health` health checks.
+- Configured Security Groups for ALB and application traffic.
+- Created EC2 IAM role, policy attachments, and Instance Profile.
+- Created EC2 Launch Template with encrypted EBS, IMDSv2, and Docker user data.
+- Configured Auto Scaling Group across private application subnets with ELB health checks.
+- Attached Auto Scaling Group to the ALB Target Group.
+- Used `for_each`, locals, and resource references to manage infrastructure.
+- Validated Terraform configuration with `terraform fmt`, `terraform validate`, and `terraform plan`.
 
 **Next**
 
-- Create ALB Target Group with HTTP health checks using `/health`.
-- Create ALB listener to forward HTTP traffic to the Target Group.
-- Create Auto Scaling Group across both private application subnets.
-- Attach the Auto Scaling Group to the Target Group.
 - Recreate the RDS PostgreSQL data tier with Multi-AZ deployment.
 - Complete observability and application configuration.
 - Configure remote Terraform state.
