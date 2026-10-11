@@ -185,6 +185,40 @@ resource "aws_lb" "alb" {
   ]
 }
 
+resource "aws_lb_target_group" "aws_cloud_lab_tg" {
+  name        = "aws-cloud-lab-tg"
+  target_type = "instance" # instance is the default, can also be IP
+  port        = 8000
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.cloud_lab.id
+
+  health_check {
+    enabled             = true
+    path                = "/health"
+    port                = "traffic-port" # The port used to connect with the target. Use "traffic-port" to match the target group port.
+    protocol            = "HTTP"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    # matcher             = "200-299"
+    matcher = "200"
+  }
+}
+
+resource "aws_lb_listener" "aws_cloud_lab_alb_listener" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 80
+  protocol          = "HTTP"
+  # ssl_policy = 
+  # ccertificate_arn = 
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.aws_cloud_lab_tg.arn
+  }
+}
+
 # iam
 resource "aws_iam_role" "app_ec2_role" {
   name = "app_ec2_role"
@@ -288,3 +322,32 @@ resource "aws_launch_template" "aws_cloud_lab" {
   )
 }
 
+# resource "aws_placement_group" "aws_cloud_lab" {
+#   name     = "aws_cloud_lab"
+#   strategy = "cluster"
+# }
+
+resource "aws_autoscaling_group" "aws_cloud_lab" {
+  name                      = "aws_cloud_lab"
+  max_size                  = 4
+  min_size                  = 2
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  desired_capacity          = 2
+  # force_delete = true
+  # placement_group = aws_placement_group.aws_cloud_lab.id
+  # launch_configuration = aws_launch_template.aws_cloud_lab.name
+  launch_template {
+    id      = aws_launch_template.aws_cloud_lab.id
+    version = "$Latest"
+  }
+  vpc_zone_identifier = [
+    for key, subnet in local.app_subnets :
+    aws_subnet.subnets[key].id
+  ]
+}
+
+resource "aws_autoscaling_attachment" "aws_cloud_lab" {
+  autoscaling_group_name = aws_autoscaling_group.aws_cloud_lab.id
+  lb_target_group_arn    = aws_lb_target_group.aws_cloud_lab_tg.arn
+}
